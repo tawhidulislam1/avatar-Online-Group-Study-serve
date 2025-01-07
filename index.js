@@ -33,7 +33,13 @@ async function run() {
       .db("AssignmentHub")
       .collection("assignment");
 
-    app.post("/assigment", async (req, res) => {
+    app.get("/assignment", async (req, res) => {
+      const curser = AssignmentCollection.find();
+      const result = await curser.toArray();
+      res.send(result);
+    });
+
+    app.post("/assignment", async (req, res) => {
       const newAssignment = req.body;
       const result = await AssignmentCollection.insertOne(newAssignment);
       console.log(result);

@@ -32,6 +32,9 @@ async function run() {
     const AssignmentCollection = client
       .db("AssignmentHub")
       .collection("assignment");
+    const AssignmentApplicationCollection = client
+      .db("AssignmentHub")
+      .collection("assignment_Applicaton");
 
     app.get("/assignment", async (req, res) => {
       const curser = AssignmentCollection.find();
@@ -78,6 +81,14 @@ async function run() {
         query,
         Assignment,
         options
+      );
+      res.send(result);
+    });
+
+    app.post("/assignment-post", async (req, res) => {
+      const application = req.body;
+      const result = await AssignmentApplicationCollection.insertOne(
+        application
       );
       res.send(result);
     });

@@ -59,6 +59,28 @@ async function run() {
       const result = await AssignmentCollection.deleteOne(query);
       res.send(result);
     });
+    app.put("/assignment/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateAssignment = req.body;
+      const Assignment = {
+        $set: {
+          title: updateAssignment.title,
+          thumbnailUrl: updateAssignment.thumbnailUrl,
+          marks: updateAssignment.marks,
+          description: updateAssignment.description,
+          difficulty: updateAssignment.difficulty,
+          dueDate: updateAssignment.dueDate,
+        },
+      };
+      const result = await AssignmentCollection.updateOne(
+        query,
+        Assignment,
+        options
+      );
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(

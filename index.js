@@ -91,19 +91,47 @@ async function run() {
       if (email) {
         query = { email: email };
       }
-      const curser = AssignmentApplicationCollection.find(query);
-      const result = await curser.toArray();
+
+      const result = await AssignmentApplicationCollection.find(
+        query
+      ).toArray();
+      for (const application of result) {
+        const query = { _id: new ObjectId(application.job_id) };
+        const assignment = await AssignmentCollection.findOne(query);
+        if (assignment) {
+          application.title = assignment.title;
+          application.marks = assignment.marks;
+        }
+      }
       res.send(result);
     });
 
     app.post("/assignment-post", async (req, res) => {
       const application = req.body;
       application.status = "pending";
+      application.obtainMarks = "Not Given";
       application.submittedAt = new Date();
       const result = await AssignmentApplicationCollection.insertOne(
         application
       );
 
+      res.send(result);
+    });
+
+    app.get("/assignment-get", async (req, res) => {
+      const status = req.query.status;
+      const query = status ? { status } : {};
+      const result = await AssignmentApplicationCollection.find(
+        query
+      ).toArray();
+      for (const application of result) {
+        const query = { _id: new ObjectId(application.job_id) };
+        const assignment = await AssignmentCollection.findOne(query);
+        if (assignment) {
+          application.title = assignment.title;
+          application.marks = assignment.marks;
+        }
+      }
       res.send(result);
     });
     // Send a ping to confirm a successful connection

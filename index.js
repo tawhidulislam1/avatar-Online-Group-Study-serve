@@ -11,7 +11,11 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://group-study-1e14a.web.app",
+      "https://group-study-1e14a.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -51,7 +55,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const AssignmentCollection = client
       .db("AssignmentHub")
       .collection("assignment");
@@ -66,9 +70,9 @@ async function run() {
       const token = jwt.sign(user, process.env.DB_SECURE, { expiresIn: "1h" });
       res
         .cookie("token", token, {
-          httpOnly: false,
+          httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true });
     });
@@ -76,9 +80,9 @@ async function run() {
     app.post("/logout", (req, res) => {
       res
         .clearCookie("token", {
-          httpOnly: false,
+          httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true });
     });
@@ -209,7 +213,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );

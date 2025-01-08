@@ -1,18 +1,41 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+
 const app = express();
 const port = process.env.PORT || 5000;
 
 //miderware
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", async (req, res) => {
   res.send("Class is Running................");
 });
+const verifyTokeen = (req, res, next) => {
+  const token = req?.cookies?.token;
 
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized access" });
+  }
+
+  jwt.verify(token, process.env.DB_SECURE, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "Unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zhrby.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -36,8 +59,37 @@ async function run() {
       .db("AssignmentHub")
       .collection("assignment_Applicaton");
 
+    //auth Related Api
+
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.DB_SECURE, { expiresIn: "1h" });
+      res
+        .cookie("token", token, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
+
+    app.post("/logout", (req, res) => {
+      res
+        .clearCookie("token", {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
+
     app.get("/assignment", async (req, res) => {
-      const curser = AssignmentCollection.find();
+      const { serachParams } = req.query;
+      let option = {};
+      if (serachParams) {
+        option = { title: { $regex: serachParams, $options: "i" } };
+      }
+      const curser = AssignmentCollection.find(option);
       const result = await curser.toArray();
       res.send(result);
     });
@@ -85,7 +137,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/assignment-post", async (req, res) => {
+    app.get("/assignment-post", verifyTokeen, async (req, res) => {
       const email = req.query.email;
       let query = {};
       if (email) {

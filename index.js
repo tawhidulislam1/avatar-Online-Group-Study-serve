@@ -110,6 +110,7 @@ async function run() {
       const application = req.body;
       application.status = "pending";
       application.obtainMarks = "Not Given";
+      application.feedback = "Not Given";
       application.submittedAt = new Date();
       const result = await AssignmentApplicationCollection.insertOne(
         application
@@ -134,6 +135,27 @@ async function run() {
       }
       res.send(result);
     });
+
+    app.patch("/assignment-post/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: data.status,
+          obtainMarks: data.obtainMarks,
+          feedback: data.feedback,
+        },
+      };
+      const result = await AssignmentApplicationCollection.updateOne(
+        filter,
+        updateDoc
+      );
+      console.log(result);
+
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(

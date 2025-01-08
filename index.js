@@ -85,11 +85,25 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/assignment-post", async (req, res) => {
+      const email = req.query.email;
+      let query = {};
+      if (email) {
+        query = { email: email };
+      }
+      const curser = AssignmentApplicationCollection.find(query);
+      const result = await curser.toArray();
+      res.send(result);
+    });
+
     app.post("/assignment-post", async (req, res) => {
       const application = req.body;
+      application.status = "pending";
+      application.submittedAt = new Date();
       const result = await AssignmentApplicationCollection.insertOne(
         application
       );
+
       res.send(result);
     });
     // Send a ping to confirm a successful connection
